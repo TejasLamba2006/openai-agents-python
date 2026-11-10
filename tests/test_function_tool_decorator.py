@@ -8,6 +8,7 @@ import inspect
 import json
 import operator
 import sys
+from abc import ABC
 from collections.abc import Callable
 from types import ModuleType
 from typing import Annotated, Any, Generic, TypeVar, cast
@@ -501,6 +502,25 @@ async def test_callable_object_uses_call_docstring_when_class_docstring_missing(
         "type": "integer",
     }
     assert await tool.on_invoke_tool(ctx_wrapper(), '{"value": 4}') == 8
+
+
+def test_callable_object_ignores_inherited_and_generated_class_docstrings() -> None:
+    class Base(ABC):  # noqa: B024 - the ABC base is what carries the inherited docstring
+        """Helper class for base."""
+
+    class NoDoc(Base):
+        def __call__(self, value: int) -> int:
+            return value
+
+    @dataclasses.dataclass
+    class Generated:
+        size: int
+
+        def __call__(self, value: int) -> int:
+            return value
+
+    assert function_tool(NoDoc()).description == ""
+    assert function_tool(Generated(1)).description == ""
 
 
 def test_callable_object_combines_class_summary_with_call_parameter_docs() -> None:

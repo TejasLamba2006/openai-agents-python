@@ -10,7 +10,7 @@ import math
 import typing
 import weakref
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, is_dataclass
 from enum import Enum
 from types import FunctionType, UnionType
 from typing import (
@@ -2504,6 +2504,19 @@ def _validate_function_tool_callable_annotations(
         )
 
 
+def _own_class_docstring(cls: type) -> str | None:
+    """Return the class's own docstring, ignoring inherited and dataclass-generated ones."""
+    # ponytail: dataclass auto-doc is detected by re-deriving its signature string.
+    doc = cls.__dict__.get("__doc__")
+    if not doc:
+        return None
+    if is_dataclass(cls) and doc == cls.__name__ + str(inspect.signature(cls)).replace(
+        " -> None", ""
+    ):
+        return None
+    return inspect.cleandoc(doc)
+
+
 def _normalize_function_tool_callable(
     func: ToolFunction[...],
     docstring_style: DocstringStyle | None,
@@ -2606,7 +2619,7 @@ def _normalize_function_tool_callable(
         adapter_metadata.__doc__ = None
         class_description = None
     else:
-        class_doc = inspect.getdoc(type(func))
+        class_doc = _own_class_docstring(type(func))
         call_doc = inspect.cleandoc(call_descriptor.__doc__) if call_descriptor.__doc__ else None
         adapter_metadata.__doc__ = call_doc or class_doc
         class_description = (
