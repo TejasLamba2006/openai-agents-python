@@ -104,7 +104,7 @@ class OpenAIConversationsSession(SessionABC):
                 order="asc",
             ):
                 # calling model_dump() to make this serializable
-                all_items.append(item.model_dump(exclude_unset=True))
+                all_items.append(item.model_dump(exclude_unset=True, by_alias=True))
         else:
             # Omit provider page size. Apply the session cutoff locally after pagination.
             async for item in self._openai_client.conversations.items.list(
@@ -112,7 +112,7 @@ class OpenAIConversationsSession(SessionABC):
                 order="desc",
             ):
                 # calling model_dump() to make this serializable
-                all_items.append(item.model_dump(exclude_unset=True))
+                all_items.append(item.model_dump(exclude_unset=True, by_alias=True))
                 if session_limit is not None and len(all_items) >= session_limit:
                     break
             all_items.reverse()

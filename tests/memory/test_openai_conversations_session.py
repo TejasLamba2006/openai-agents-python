@@ -256,8 +256,9 @@ class TestOpenAIConversationsSessionBasicOperations:
             def __init__(self, item_id: int) -> None:
                 self.item_id = item_id
 
-            def model_dump(self, *, exclude_unset: bool) -> dict[str, int]:
+            def model_dump(self, *, exclude_unset: bool, by_alias: bool = False) -> dict[str, int]:
                 assert exclude_unset is True
+                assert by_alias is True
                 return {"item_id": self.item_id}
 
         yielded_item_ids: list[int] = []
